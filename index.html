@@ -199,18 +199,20 @@ body {
 .grid-area {
   background: #0a0a0a;
   padding: 20px 14px 14px;
-  display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+  display: flex; flex-direction: column; flex-shrink: 0;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
 .grid-label {
   font-size: 10px; letter-spacing: 2px;
   color: var(--text-tertiary);
   text-transform: uppercase;
   margin-bottom: 14px; font-weight: 600;
+  text-align: center;
 }
 
 /* CROSSWORD TABLE */
-.cw-table { border-collapse: collapse; table-layout: fixed; }
+.cw-table { border-collapse: collapse; table-layout: fixed; margin: 0 auto; }
 .cw-table td {
   width: var(--cs); height: var(--cs);
   padding: 0; border: none; background: transparent; position: relative;
@@ -547,8 +549,8 @@ td.empty-td { pointer-events: none; }
 }
 
 .grid-area { width: 100%; max-width: 100%; }
-.grid-area > div { overflow: auto; -webkit-overflow-scrolling: touch; }
-.cw-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.grid-area > div { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cw-table { width: auto; table-layout: fixed; border-collapse: collapse; margin: 0 auto; }
 .cw-table td { width: var(--cs); height: var(--cs); }
 .cell-block {
   font-size: clamp(11px, 3.5vw, 15px);
@@ -1152,7 +1154,7 @@ function renderGame() {
     panel.innerHTML = `
       <div class="grid-area">
         <div class="grid-label">${puz.title}</div>
-        <div id="grid-${pIdx}" style="overflow-x:auto;max-width:100%;"></div>
+        <div id="grid-${pIdx}" style="overflow-x:auto;max-width:100%;width:100%;"></div>
       </div>
       <div class="kw-strip" id="kws-${pIdx}">
         <div class="kw-left">
@@ -1354,10 +1356,20 @@ function processChar(pIdx, r, c, ch) {
   
   // Normalize: remove diacritics for comparison? No – we want exact Vietnamese
   // The user types Vietnamese letters directly
-  const typed = ch.toUpperCase();
+  let typed = ch.toUpperCase();
   const correct = cellData.letter.toUpperCase();
   
   const el = document.getElementById(`cell-${pIdx}-${r}-${c}`);
+  
+  // Hỗ trợ gõ telex: nhập 2 chữ d thành đ
+  if (typed === 'D' && el.dataset.waitD === '1') {
+    typed = 'Đ';
+    el.dataset.waitD = '0';
+  } else if (typed === 'D') {
+    el.dataset.waitD = '1';
+  } else {
+    el.dataset.waitD = '0';
+  }
   
   // Check if typed matches (compare normalized unicode)
   const isCorrect = normalizeChar(typed) === normalizeChar(correct);
